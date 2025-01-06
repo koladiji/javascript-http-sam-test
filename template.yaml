@@ -248,18 +248,18 @@ Resources:
   #               Headers:
   #                 - Authorization
   #       DefaultAuthorizer: LambdaAuthorizer
-  #     AccessLogSettings:
-  #       DestinationArn: !GetAtt AccessLogs.Arn
-  #       Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
-  #     Tags:
-  #       Name: !Sub "${AWS::StackName}-API"
-  #       Stack: !Sub "${AWS::StackName}"
+      AccessLogSettings:
+        DestinationArn: !GetAtt AccessLogs.Arn
+        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
+      Tags:
+        Name: !Sub "${AWS::StackName}-API"
+        Stack: !Sub "${AWS::StackName}"
 
-  # AccessLogs:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     RetentionInDays: 30
-  #     LogGroupName: !Sub "/${AWS::StackName}/APIAccessLogs"
+  AccessLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/${AWS::StackName}/APIAccessLogs"
 
 
   LocationsTable:
