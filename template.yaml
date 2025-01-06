@@ -670,7 +670,7 @@ Resources:
                     "type": "metric",
                     "properties": {
                         "metrics": [
-                            [ "AWS/Lambda", "Invocations", "FunctionName", "${AuthorizerFunction}" ],
+                            [ "AWS/Lambda", "Invocations", "FunctionName", "AuthorizerFunction" ],
                             [ ".", "Errors", ".", "." ],
                             [ ".", "Throttles", ".", "." ],
                             [ ".", "Duration", ".", ".", { "stat": "Average" } ],
