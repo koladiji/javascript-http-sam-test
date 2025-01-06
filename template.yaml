@@ -15,11 +15,11 @@ Globals:
     Timeout: 100
     Tracing: Active
 
-Parameters:
-  CognitoStackName:
-    Description: An environment name for Cognito stack
-    Type: String
-    Default: apigw-samples-cognito-shared
+# Parameters:
+#   CognitoStackName:
+#     Description: An environment name for Cognito stack
+#     Type: String
+#     Default: apigw-samples-cognito-shared
 
 Resources:
   LocationsFunction:
@@ -166,58 +166,58 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${BookingsFunction}"
       RetentionInDays: 7
 
-  AuthorizerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: src/api/authorizer.handler
-      Description: Handler for Lambda authorizer
-      Environment:
-        Variables:
-          USER_POOL_ID: 
-            Fn::ImportValue: 
-              !Sub "${CognitoStackName}-UserPool"
-          ADMIN_GROUP_NAME: 
-            Fn::ImportValue: 
-              !Sub "${CognitoStackName}-UserPoolAdminGroupName"
-      Tags:
-        Stack: !Sub "${AWS::StackName}"
+  # AuthorizerFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: src/api/authorizer.handler
+  #     Description: Handler for Lambda authorizer
+  #     Environment:
+  #       Variables:
+  #         USER_POOL_ID: 
+  #           Fn::ImportValue: 
+  #             !Sub "${CognitoStackName}-UserPool"
+  #         ADMIN_GROUP_NAME: 
+  #           Fn::ImportValue: 
+  #             !Sub "${CognitoStackName}-UserPoolAdminGroupName"
+  #     Tags:
+  #       Stack: !Sub "${AWS::StackName}"
 
-  AuthorizerFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/lambda/${AuthorizerFunction}"
-      RetentionInDays: 7
+  # AuthorizerFunctionLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     LogGroupName: !Sub "/aws/lambda/${AuthorizerFunction}"
+  #     RetentionInDays: 7
 
-  AuthorizerFunctionExecutionRole: 
-    Type: AWS::IAM::Role
-    Properties: 
-      AssumeRolePolicyDocument: 
-        Version: "2012-10-17"
-        Statement: 
-          - 
-            Effect: Allow
-            Principal: 
-              Service: 
-                - apigateway.amazonaws.com
-            Action: 
-              - sts:AssumeRole
-      Path: "/"
-      Tags:
-        - Key: "Stack" 
-          Value: !Sub "${AWS::StackName}"
+  # AuthorizerFunctionExecutionRole: 
+  #   Type: AWS::IAM::Role
+  #   Properties: 
+  #     AssumeRolePolicyDocument: 
+  #       Version: "2012-10-17"
+  #       Statement: 
+  #         - 
+  #           Effect: Allow
+  #           Principal: 
+  #             Service: 
+  #               - apigateway.amazonaws.com
+  #           Action: 
+  #             - sts:AssumeRole
+  #     Path: "/"
+  #     Tags:
+  #       - Key: "Stack" 
+  #         Value: !Sub "${AWS::StackName}"
 
-  AuthorizerFunctionExecutionRolePolicy: 
-    Type: AWS::IAM::Policy
-    Properties: 
-      PolicyName: !Sub ${AWS::StackName}-Authorizer-Policy
-      PolicyDocument: 
-        Version: "2012-10-17"
-        Statement: 
-          - Effect: Allow
-            Action: lambda:InvokeFunction
-            Resource: !GetAtt AuthorizerFunction.Arn
-      Roles: 
-        - Ref: AuthorizerFunctionExecutionRole
+  # AuthorizerFunctionExecutionRolePolicy: 
+  #   Type: AWS::IAM::Policy
+  #   Properties: 
+  #     PolicyName: !Sub ${AWS::StackName}-Authorizer-Policy
+  #     PolicyDocument: 
+  #       Version: "2012-10-17"
+  #       Statement: 
+  #         - Effect: Allow
+  #           Action: lambda:InvokeFunction
+  #           Resource: !GetAtt AuthorizerFunction.Arn
+  #     Roles: 
+  #       - Ref: AuthorizerFunctionExecutionRole
 
   HttpApi:
     Type: AWS::Serverless::HttpApi
@@ -238,28 +238,28 @@ Resources:
           - X-Amz-Security-Token
         AllowOrigins: 
           - "*"
-      Auth: 
-        Authorizers:
-          LambdaAuthorizer:
-            AuthorizerPayloadFormatVersion: 1.0
-            FunctionArn: !GetAtt AuthorizerFunction.Arn
-            FunctionInvokeRole: !GetAtt AuthorizerFunctionExecutionRole.Arn
-            Identity:
-                Headers:
-                  - Authorization
-        DefaultAuthorizer: LambdaAuthorizer
-      AccessLogSettings:
-        DestinationArn: !GetAtt AccessLogs.Arn
-        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
-      Tags:
-        Name: !Sub "${AWS::StackName}-API"
-        Stack: !Sub "${AWS::StackName}"
+  #     Auth: 
+  #       Authorizers:
+  #         LambdaAuthorizer:
+  #           AuthorizerPayloadFormatVersion: 1.0
+  #           FunctionArn: !GetAtt AuthorizerFunction.Arn
+  #           FunctionInvokeRole: !GetAtt AuthorizerFunctionExecutionRole.Arn
+  #           Identity:
+  #               Headers:
+  #                 - Authorization
+  #       DefaultAuthorizer: LambdaAuthorizer
+  #     AccessLogSettings:
+  #       DestinationArn: !GetAtt AccessLogs.Arn
+  #       Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
+  #     Tags:
+  #       Name: !Sub "${AWS::StackName}-API"
+  #       Stack: !Sub "${AWS::StackName}"
 
-  AccessLogs:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/${AWS::StackName}/APIAccessLogs"
+  # AccessLogs:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     RetentionInDays: 30
+  #     LogGroupName: !Sub "/${AWS::StackName}/APIAccessLogs"
 
 
   LocationsTable:
@@ -412,21 +412,21 @@ Resources:
       Statistic: Sum
       Threshold: 1.0
 
-  AuthorizerFunctionErrorsAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmActions:
-        - !Ref AlarmsTopic
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref AuthorizerFunction
-      EvaluationPeriods: 1
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Period: 60
-      Statistic: Sum
-      Threshold: 1.0
+  # AuthorizerFunctionErrorsAlarm:
+  #   Type: AWS::CloudWatch::Alarm
+  #   Properties:
+  #     AlarmActions:
+  #       - !Ref AlarmsTopic
+  #     ComparisonOperator: GreaterThanOrEqualToThreshold
+  #     Dimensions:
+  #       - Name: FunctionName
+  #         Value: !Ref AuthorizerFunction
+  #     EvaluationPeriods: 1
+  #     MetricName: Errors
+  #     Namespace: AWS/Lambda
+  #     Period: 60
+  #     Statistic: Sum
+  #     Threshold: 1.0
 
   LocationsFunctionErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -524,21 +524,21 @@ Resources:
       Statistic: Sum
       Threshold: 1.0
 
-  AuthorizerFunctionThrottlingAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmActions:
-        - !Ref AlarmsTopic
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref AuthorizerFunction
-      EvaluationPeriods: 1
-      MetricName: Throttles
-      Namespace: AWS/Lambda
-      Period: 60
-      Statistic: Sum
-      Threshold: 1.0
+  # AuthorizerFunctionThrottlingAlarm:
+  #   Type: AWS::CloudWatch::Alarm
+  #   Properties:
+  #     AlarmActions:
+  #       - !Ref AlarmsTopic
+  #     ComparisonOperator: GreaterThanOrEqualToThreshold
+  #     Dimensions:
+  #       - Name: FunctionName
+  #         Value: !Ref AuthorizerFunction
+  #     EvaluationPeriods: 1
+  #     MetricName: Throttles
+  #     Namespace: AWS/Lambda
+  #     Period: 60
+  #     Statistic: Sum
+  #     Threshold: 1.0
 
   LocationsDynamoDBThrottlingAlarm:
     Type: AWS::CloudWatch::Alarm
