@@ -26,22 +26,22 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
           Handler: src/api/event-categories.handler
-          Description: Handler for all Checklists related operations
+          Description: Handler for all event categories related operations
           Environment:
             Variables:
-              CHECKLISTS_TABLE: !Ref EventCategoriesTable
+              EVENT_CATEGORIES_TABLE: !Ref EventCategoriesTable
               AWS_EMF_NAMESPACE: !Sub ${AWS::StackName}
           Policies:
             - DynamoDBCrudPolicy:
                 TableName: !Ref EventCategoriesTable
           Events:
-            PostChecklist:
+            PostEventCategories:
               Type: HttpApi
               Properties:
                 ApiId: !Ref HttpApi
                 Path: /api/event-categories
                 Method: POST
-            GetChecklists:
+            GetEventCategories:
               Type: HttpApi
               Properties:
                 ApiId: !Ref HttpApi
