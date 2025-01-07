@@ -1,2 +1,5 @@
+.DS_Store
 node_modules/**
 .aws-sam/**
+coverage/**
+__tests__/unit/handlers/ttt.json
