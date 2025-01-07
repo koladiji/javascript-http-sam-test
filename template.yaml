@@ -22,6 +22,40 @@ Globals:
 #     Default: apigw-samples-cognito-shared
 
 Resources:
+ChecklistsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/api/Checklists.handler
+      Description: Handler for all Checklists related operations
+      Environment:
+        Variables:
+          CHECKLISTS_TABLE: !Ref ChecklistsTable
+          AWS_EMF_NAMESPACE: !Sub ${AWS::StackName}
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChecklistsTable
+      Events:
+        PostLocation:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/checklists
+            Method: POST
+        GetLocations:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/checklists
+            Method: GET
+      Tags:
+        Stack: !Sub "${AWS::StackName}"
+
+ChecklistsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ChecklistsFunction}"
+      RetentionInDays: 7
+
   LocationsFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -261,6 +295,17 @@ Resources:
       RetentionInDays: 30
       LogGroupName: !Sub "/${AWS::StackName}/APIAccessLogs"
 
+ChecklistsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      Tags:
+        Stack: !Sub "${AWS::StackName}"
 
   LocationsTable:
     Type: AWS::Serverless::SimpleTable
@@ -427,6 +472,22 @@ Resources:
   #     Period: 60
   #     Statistic: Sum
   #     Threshold: 1.0
+
+ChecklistsFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Ref AlarmsTopic
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ChecklistsFunction
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1.0
 
   LocationsFunctionErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -810,10 +871,13 @@ Outputs:
     Description: "CloudWatch Logs group for API Gateway access logs"
     Value: !Ref AccessLogs
 
+  ChecklistsTable:
+    Description: "DynamoDB Locations table"
+    Value: !Ref ChecklistsTable
+    
   LocationsTable:
     Description: "DynamoDB Locations table"
     Value: !Ref LocationsTable
-    
   ResourcesTable:
     Description: "DynamoDB Resources table"
     Value: !Ref ResourcesTable
