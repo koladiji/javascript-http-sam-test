@@ -389,7 +389,7 @@ Resources:
       GlobalSecondaryIndexes:
       - IndexName: categoryIdGSI
         KeySchema:
-        - AttributeName: id
+        - AttributeName: categoryId
           KeyType: HASH
         Projection:
           ProjectionType: ALL
