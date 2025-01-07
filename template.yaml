@@ -374,6 +374,7 @@ Resources:
   EventSubCategoriesTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      TableName: planurai_event_sub_categories
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
