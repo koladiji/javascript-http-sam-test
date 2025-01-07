@@ -22,6 +22,7 @@ Globals:
 #     Default: apigw-samples-cognito-shared
 
 Resources:
+
   EventCategoriesFunction:
         Type: AWS::Serverless::Function
         Properties:
@@ -54,6 +55,34 @@ Resources:
       Type: AWS::Logs::LogGroup
       Properties:
         LogGroupName: !Sub "/aws/lambda/${EventCategoriesFunction}"
+        RetentionInDays: 7
+
+  EventSubCategoriesFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+          Handler: src/api/event-categories.handler
+          Description: Handler for all event sub categories related operations
+          Environment:
+            Variables:
+              EVENT_SUB_CATEGORIES_TABLE: !Ref EventSubCategoriesTable
+              AWS_EMF_NAMESPACE: !Sub ${AWS::StackName}
+          Policies:
+            - DynamoDBCrudPolicy:
+                TableName: !Ref EventSubCategoriesTable
+          Events:
+            PostEventCategories:
+              Type: HttpApi
+              Properties:
+                ApiId: !Ref HttpApi
+                Path: /api/event-categories/{categoryId}/subcategories
+                Method: POST
+          Tags:
+            Stack: !Sub "${AWS::StackName}"
+
+  EventSubCategoriesFunctionLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: !Sub "/aws/lambda/${EventSubCategoriesFunction}"
         RetentionInDays: 7
 
   ChecklistsFunction:
@@ -342,6 +371,34 @@ Resources:
         Tags:
           Stack: !Sub "${AWS::StackName}"
 
+  EventSubCategoriesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: categoryId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      GlobalSecondaryIndexes:
+      - IndexName: categoryIdGSI
+        KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 2
+          WriteCapacityUnits: 2
+      Tags:
+        - Key: "Stack" 
+          Value: !Sub "${AWS::StackName}"
+
   ChecklistsTable:
       Type: AWS::Serverless::SimpleTable
       Properties:
@@ -529,6 +586,22 @@ Resources:
         Dimensions:
           - Name: FunctionName
             Value: !Ref EventCategoriesFunction
+        EvaluationPeriods: 1
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Period: 60
+        Statistic: Sum
+        Threshold: 1.0
+
+  EventSubCategoriesFunctionErrorsAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmActions:
+          - !Ref AlarmsTopic
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref EventSubCategoriesFunction
         EvaluationPeriods: 1
         MetricName: Errors
         Namespace: AWS/Lambda
@@ -935,9 +1008,13 @@ Outputs:
     Value: !Ref AccessLogs
 
   EventCategoriesTable:
-    Description: "DynamoDB Locations table"
+    Description: "DynamoDB Event Categories table"
     Value: !Ref EventCategoriesTable
-   
+
+  EventSubCategoriesTable:
+    Description: "DynamoDB Event Sub Categories table"
+    Value: !Ref EventSubCategoriesTable
+ 
   ChecklistsTable:
     Description: "DynamoDB Locations table"
     Value: !Ref ChecklistsTable
