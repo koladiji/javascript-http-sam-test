@@ -10,11 +10,11 @@ const dynamo = DynamoDBDocument.from(ddbClient);
 const catTableName = process.env.EVENT_CATEGORIES_TABLE;
 const subCatTableName = process.env.EVENT_SUB_CATEGORIES_TABLE;
 
-exports.handler = metricScope(metrics => async (event, context) => {
+exports.handler = metricScope((metrics) => async (event, context) => {
   let body;
   let statusCode = 200;
   const headers = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   };
 
   try {
@@ -22,21 +22,20 @@ exports.handler = metricScope(metrics => async (event, context) => {
       // create new event-categories
       case "POST /api/event-categories":
         let requestJSON = JSON.parse(event.body);
-        
+
         let id = uuid.v1();
         let newitem = {
           id,
           name: requestJSON.name,
           description: requestJSON.description,
-          dateCreated: new Date().toISOString()
-        }
-        
+          dateCreated: new Date().toISOString(),
+        };
+
         // update the database
-        await dynamo
-          .put({
-            TableName: catTableName,
-            Item: newitem
-          });
+        await dynamo.put({
+          TableName: catTableName,
+          Item: newitem,
+        });
         body = newitem;
         break;
       // Get all event-categories items
@@ -44,26 +43,27 @@ exports.handler = metricScope(metrics => async (event, context) => {
         // get data from the database
         body = await dynamo.scan({ TableName: catTableName });
         break;
-// create new event-categories
-case "POST /api/event-categories":
-  let sub_catJSON = JSON.parse(event.body);
-  
-  let sub_cat_id = uuid.v1();
-  let sub_cat_item = {
-    id: sub_cat_id,
-    name: requestJSON.name,
-    description: requestJSON.description,
-    dateCreated: new Date().toISOString()
-  }
-  
-  // update the database
-  await dynamo
-    .put({
-      TableName: subCatTableName,
-      Item: sub_cat_item
-    });
-  body = sub_cat_item;
-  break;
+      // create new event-categories
+      case "POST /api/event-categories/{categoryId}/subcategories":
+        let sub_catJSON = JSON.parse(event.body);
+
+        let sub_cat_id = uuid.v1();
+        let sub_cat_item = {
+          id: sub_cat_id,
+          categoryId: event.pathParameters.categoryId,
+          name: sub_catJSON.name,
+          description: sub_catJSON.description,
+          dateCreated: new Date().toISOString(),
+        };
+
+        // update the database
+
+        await dynamo.put({
+          TableName: subCatTableName,
+          Item: sub_cat_item,
+        });
+        body = sub_cat_item;
+        break;
 
       default:
         throw new Error(`Unsupported route: "${event.routeKey}"`);
@@ -79,6 +79,6 @@ case "POST /api/event-categories":
   return {
     statusCode,
     body,
-    headers
+    headers,
   };
 });
