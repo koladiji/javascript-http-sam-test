@@ -22,6 +22,40 @@ Globals:
 #     Default: apigw-samples-cognito-shared
 
 Resources:
+  EventCategoriesFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+          Handler: src/api/event-categories.handler
+          Description: Handler for all Checklists related operations
+          Environment:
+            Variables:
+              CHECKLISTS_TABLE: !Ref EventCategoriesTable
+              AWS_EMF_NAMESPACE: !Sub ${AWS::StackName}
+          Policies:
+            - DynamoDBCrudPolicy:
+                TableName: !Ref EventCategoriesTable
+          Events:
+            PostChecklist:
+              Type: HttpApi
+              Properties:
+                ApiId: !Ref HttpApi
+                Path: /api/event-categories
+                Method: POST
+            GetChecklists:
+              Type: HttpApi
+              Properties:
+                ApiId: !Ref HttpApi
+                Path: /api/event-categories
+                Method: GET
+          Tags:
+            Stack: !Sub "${AWS::StackName}"
+
+  EventCategoriesFunctionLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: !Sub "/aws/lambda/${EventCategoriesFunction}"
+        RetentionInDays: 7
+
   ChecklistsFunction:
       Type: AWS::Serverless::Function
       Properties:
@@ -295,6 +329,19 @@ Resources:
       RetentionInDays: 30
       LogGroupName: !Sub "/${AWS::StackName}/APIAccessLogs"
 
+  EventCategoriesTable:
+      Type: AWS::Serverless::SimpleTable
+      Properties:
+        TableName: planurai_event_categories
+        PrimaryKey:
+          Name: id
+          Type: String
+        ProvisionedThroughput:
+          ReadCapacityUnits: 2
+          WriteCapacityUnits: 2
+        Tags:
+          Stack: !Sub "${AWS::StackName}"
+
   ChecklistsTable:
       Type: AWS::Serverless::SimpleTable
       Properties:
@@ -472,6 +519,22 @@ Resources:
   #     Period: 60
   #     Statistic: Sum
   #     Threshold: 1.0
+
+  EventCategoriesFunctionErrorsAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmActions:
+          - !Ref AlarmsTopic
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref EventCategoriesFunction
+        EvaluationPeriods: 1
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Period: 60
+        Statistic: Sum
+        Threshold: 1.0
 
   ChecklistsFunctionErrorsAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -871,6 +934,10 @@ Outputs:
     Description: "CloudWatch Logs group for API Gateway access logs"
     Value: !Ref AccessLogs
 
+  EventCategoriesTable:
+    Description: "DynamoDB Locations table"
+    Value: !Ref EventCategoriesTable
+   
   ChecklistsTable:
     Description: "DynamoDB Locations table"
     Value: !Ref ChecklistsTable
